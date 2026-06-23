@@ -48,23 +48,6 @@ export default function Home() {
 
   useEffect(() => {
     fetchData();
-    let tick = 0;
-    const interval = setInterval(async () => {
-        try {
-          // Alternate: even tick = check exam, odd tick = summarize
-          if (tick % 2 === 0) {
-            await fetch("/api/cron");
-          } else {
-            await fetch("/api/cron-summary");
-          }
-          tick++;
-          fetchData();
-        } catch {
-          // Silently ignore fetch failures (network/extension errors)
-        }
-    }, 180000); // 3 minutes
-    
-    return () => clearInterval(interval);
   }, []);
 
   const handleSeed = async () => {
