@@ -98,6 +98,18 @@ export default function Home() {
             <p className="subtitle">Click on any exam card to view detailed information.</p>
         </div>
         <div className="header-actions">
+            <button onClick={async () => {
+                try {
+                    const res = await fetch("/api/cron");
+                    const data = await res.json();
+                    alert("Cron response: " + JSON.stringify(data));
+                    fetchData();
+                } catch (e) {
+                    alert("Fetch failed: " + e.message);
+                }
+            }} className="btn primary-btn" style={{marginRight: '10px'}}>
+                Force Check (Debug)
+            </button>
             {exams.length === 0 && (
                 <button onClick={handleSeed} disabled={isSeeding} className="btn primary-btn">
                     {isSeeding ? "Initializing..." : "Seed Database from JSON"}
