@@ -14,10 +14,10 @@ export default function Navbar() {
         <Link href="/" className={`nav-link ${pathname === '/' ? 'nav-active' : ''}`}>
           Dashboard
         </Link>
-        <Link href="/history" className={`nav-link ${pathname === '/history' ? 'nav-active' : ''}`}>
+        <Link href="/frontend/history" className={`nav-link ${pathname === '/frontend/history' ? 'nav-active' : ''}`}>
           History Logs
         </Link>
-        <Link href="/api-keys" className={`nav-link ${pathname === '/api-keys' ? 'nav-active' : ''}`}>
+        <Link href="/frontend/api-keys" className={`nav-link ${pathname === '/frontend/api-keys' ? 'nav-active' : ''}`}>
           API Keys
         </Link>
       </div>

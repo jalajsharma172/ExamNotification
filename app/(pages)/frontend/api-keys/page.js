@@ -14,7 +14,7 @@ export default function ApiKeysPage() {
   const fetchKeys = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/gemini-keys");
+      const res = await fetch("/api/api-keys");
       const data = await res.json();
       if (data.success) {
         setKeys(data.keys.map(k => ({ ...k, status: 'untested' })));
