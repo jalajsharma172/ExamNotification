@@ -7,9 +7,12 @@ import { getAllApiKeys } from '../config/gemini.js';
  * Runs the check cron for all exams, updates DB, and populates the history.
  */
 export async function runExamCheckCron() {
+  let currentindex = -1;
   const apiKeys = getAllApiKeys();
   console.log(`🔑 Found ${apiKeys.length} Gemini API keys.`);
-
+  if (!keys || keys.length === 0) {
+    throw new Error('No Gemini API keys found in environment variables.');
+  }
   const exams = await getExamsFromDB();
   if (!exams || exams.length === 0) {
     return { message: 'No exams found in database.' };
@@ -17,10 +20,13 @@ export async function runExamCheckCron() {
 
   console.log(`📋 Found ${exams.length} exams to process.`);
 
+
   const results = [];
   const errors = [];
 
   for (const exam of exams) {
+    const index = (currentKeyIndex + 1) % keys.length;
+    const apiKey = keys[index];
     const prompt = `
       You are an expert at tracking government and bank IT recruitment exams in India.
       I need to know the latest update or expected notification date for this specific exam:
@@ -38,55 +44,24 @@ export async function runExamCheckCron() {
     `;
 
     try {
-      const { response, successfull, unsucessfull } = await callGeminiCyclic(prompt);
-      const aiResult = JSON.parse(response.text);
-
-      const { error: updateError } = await supabase
-        .from('exams')
-        .update({
-          status: aiResult.status,
-          expected_date: aiResult.expectedDate,
-          details: aiResult.details,
-          last_checked_at: new Date().toISOString(),
-          is_retrying: false,
-        })
-        .eq('id', exam.id);
-
-      if (updateError) {
-        console.error(`DB update error for ${exam.name}:`, updateError.message);
-        errors.push({ exam: exam.name, error: updateError.message });
-        continue;
-      }
-
-      await supabase.from('check_history').insert({
-        exam_id: exam.id,
-        status: aiResult.status,
-        expected_date: aiResult.expectedDate,
-        details: aiResult.details,
-        is_correct: true,
-        successfull,
-        unsucessfull,
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: prompt,
+        config: { responseMimeType: 'application/json' }
       });
-
-      console.log(`✅ Saved: ${exam.name} → ${aiResult.status} [success calls: ${successfull}, failed calls: ${unsucessfull}]`);
-      results.push({ exam: exam.name, result: aiResult, successfull, unsucessfull });
-
+      if (response.status != 200) {
+        console.error(`❌ Can't get detailes of ${exam.name}:`);
+        errors.push({ exam: exam.name, error: response.error.message });
+        continue;
+      } else {
+        const aiResult = JSON.parse(response.text);
+        results.push({ exam: exam.name, result: aiResult });
+      }
+      await new Promise(resolve => setTimeout(resolve, 10000));//10 sec wait
     } catch (err) {
       console.error(`❌ Failed for ${exam.name}:`, err.message);
       errors.push({ exam: exam.name, error: err.message });
-
-      const successfull = err.successfull ?? 0;
-      const unsucessfull = err.unsucessfull ?? apiKeys.length;
-
-      await supabase.from('check_history').insert({
-        exam_id: exam.id,
-        status: 'Unknown',
-        details: `Auto-check failed: ${err.message}`,
-        is_correct: false,
-        successfull,
-        unsucessfull,
-      });
-
       continue;
     }
   }
@@ -170,7 +145,7 @@ Analyze them and return ONLY valid JSON in this exact format:
 
 Return ONLY the JSON, nothing else.
   `;
-  
+
   const response = await callGeminiWithFallback(prompt);
   const conciseText = response.text.trim();
 
@@ -192,3 +167,35 @@ Return ONLY the JSON, nothing else.
     summarized_exam: examToProcess.name
   };
 }
+
+
+/*
+ const { error: updateError } = await supabase
+        .from('exams')
+        .update({
+          status: aiResult.status,
+          expected_date: aiResult.expectedDate,
+          details: aiResult.details,
+          last_checked_at: new Date().toISOString(),
+          is_retrying: false,
+        })
+        .eq('id', exam.id);
+
+      if (updateError) {
+        console.error(`DB update error for ${exam.name}:`, updateError.message);
+        errors.push({ exam: exam.name, error: updateError.message });
+        continue;
+      }
+
+      await supabase.from('check_history').insert({
+        exam_id: exam.id,
+        status: aiResult.status,
+        expected_date: aiResult.expectedDate,
+        details: aiResult.details,
+        is_correct: true,
+        successfull,
+        unsucessfull,
+      });
+
+      console.log(`✅ Saved: ${exam.name} → ${aiResult.status} [success calls: ${successfull}, failed calls: ${unsucessfull}]`);
+*/

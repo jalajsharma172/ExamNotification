@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { seedDatabase, getExams } from '../controllers/exam.controller.js';
-import { checkCronAuth } from '../middlewares/auth.middleware.js';
+import { getExams } from '../controllers/exam.controller.js';
+// import { checkCronAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
 // Allow public or optionally protected seed endpoint
-router.get('/seed', checkCronAuth, seedDatabase);
+
 router.get('/exams', getExams);
 
 export default router;

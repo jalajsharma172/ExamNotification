@@ -8,21 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const EXAMS_FILE_PATH = path.resolve(__dirname, '../../../data/exams.json');
 
-/**
- * Seeds the database with exams from data/exams.json.
- */
-export async function seedExams() {
-  const examsData = fs.readFileSync(EXAMS_FILE_PATH, 'utf8');
-  const exams = JSON.parse(examsData);
-  
-  const { data, error } = await supabase
-    .from('exams')
-    .upsert(exams, { onConflict: 'name' })
-    .select();
-    
-  if (error) throw error;
-  return data?.length || 0;
-}
+
 
 /**
  * Fetches all exams from Supabase ordered by last_checked_at.
@@ -32,13 +18,13 @@ export async function getExamsFromDB() {
     .from('exams')
     .select('*')
     .order('last_checked_at', { ascending: true, nullsFirst: true });
-    
+
   if (error) throw error;
   return exams || [];
 }
 
 /**
- * Fetches a draft prompt update for all exams from the local exams file using a single API Key.
+ * Fetches a draft prompt update for all exams from the database using a single API Key.
  */
 export async function fetchExamUpdatesFromAI() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -46,10 +32,12 @@ export async function fetchExamUpdatesFromAI() {
     throw new Error('GEMINI_API_KEY environment variable is missing.');
   }
   const ai = new GoogleGenAI({ apiKey });
-  
-  const examsData = fs.readFileSync(EXAMS_FILE_PATH, 'utf8');
-  const exams = JSON.parse(examsData);
-  
+
+  const exams = await getExamsFromDB();
+  if (exams.length === 0) {
+    return { updates: [] };
+  }
+
   const prompt = `
     You are an expert at tracking government and bank IT recruitment exams in India.
     I have a list of exams. I need to know the latest update or expected notification date for each.

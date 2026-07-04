@@ -4,7 +4,7 @@ import { checkCronAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.get('/cron', checkCronAuth, runCron);
-router.get('/cron-summary', checkCronAuth, runSummary);
+router.get('/cron', runCron);
+router.get('/cron-summary', runSummary);
 
 export default router;

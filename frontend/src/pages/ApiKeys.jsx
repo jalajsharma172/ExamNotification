@@ -30,13 +30,13 @@ export default function ApiKeys() {
   const testKey = async (keyName, keyValue) => {
     setKeys(prev => prev.map(k => k.name === keyName ? { ...k, status: 'testing' } : k));
     try {
-      const res = await fetch("/api/gemini-keys/test", {
+      const res = await fetch("/api/api-keys/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: keyValue })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         setKeys(prev => prev.map(k => k.name === keyName ? { ...k, status: 'working', message: 'Working (200 OK)' } : k));
       } else {
@@ -76,7 +76,7 @@ export default function ApiKeys() {
 
         <main>
           {error && <div className="error">{error}</div>}
-          
+
           {loading ? (
             <div className="grid">
               {[...Array(4)].map((_, i) => (
@@ -115,9 +115,9 @@ export default function ApiKeys() {
                         )}
                       </td>
                       <td>
-                        <button 
-                          onClick={() => testKey(k.name, k.key)} 
-                          className="btn" 
+                        <button
+                          onClick={() => testKey(k.name, k.key)}
+                          className="btn"
                           style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
                           disabled={k.status === 'testing'}
                         >
