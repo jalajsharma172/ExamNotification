@@ -1,4 +1,4 @@
-import { fetchExamUpdatesFromAI } from '../services/exam.service.js';
+import { getExamsFromDB } from '../supabase/getExamsInfoFromDB.js';
 
 
 
@@ -7,9 +7,12 @@ import { fetchExamUpdatesFromAI } from '../services/exam.service.js';
  */
 export async function getExams(req, res, next) {
   try {
-    const updates = await fetchExamUpdatesFromAI();
+    const updates = await getExamsFromDB();
     return res.json(updates);
   } catch (error) {
-    return next(error);
+    console.error(error);
+  return next(error);
   }
 }
+
+// console.log(await getExams());
