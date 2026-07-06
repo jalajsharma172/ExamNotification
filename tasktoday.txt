@@ -1,0 +1,4 @@
+1. make it working
+2. Setup Corns 
+3. Learn About next topic + superbase
+ 
