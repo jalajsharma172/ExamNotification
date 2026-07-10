@@ -1,16 +1,19 @@
-import  supabase from '../config/supabase.js';
-import { getExamsFromDBDesc } from '../supabase/getExamsInfoFromDB.js';
-import config from '../config/config.js';
-export async function checkexam(req, res, next) {
-    const list=config.geminiApiKeyList();
-    let i=0;
-    const data=await getExamsFromDBDesc();
-    console.log("data",data);
-    for (let i = 0; i < data.length; i++) { 
-        let key=list[i];
-        
-    }
+
+import {AutoRun} from '../services/autoruncrons';
+
+
+/**
+ * Controller to fetch immediate exam updates using Gemini AI.
+ */
+export async function getExams(req, res, next) {
+  try {
+    const cnt = await AutoRun();
+    const setcnt=await 
+    return res.json(updates);
+  } catch (error) {
+    console.error(error);
+  return next(error);
+  }
 }
 
-
-await checkexam();
+// console.log(await getExams());
